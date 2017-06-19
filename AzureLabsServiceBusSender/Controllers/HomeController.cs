@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Threading;
 using System.Web.Mvc;
 using AzureLabsServiceBusSender.Models;
 using Microsoft.ServiceBus;
@@ -132,6 +133,7 @@ namespace AzureLabsServiceBusSender.Controllers
             msg.Properties.Add("Action", 0);
             topicClient.Send(msg);
 
+            Thread.Sleep(2000);
             return RedirectToAction("Saved");
         }
 
@@ -147,6 +149,7 @@ namespace AzureLabsServiceBusSender.Controllers
             msg.Properties.Add("Action", 1);
             topicClient.Send(msg);
 
+            Thread.Sleep(2000);
             return RedirectToAction("Manage");
         }
 

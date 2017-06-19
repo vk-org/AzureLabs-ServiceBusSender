@@ -116,6 +116,11 @@ namespace AzureLabsServiceBusSender.Controllers
                 var saveFilter = new SqlFilter("Action = 'save'");
                 nsm.CreateSubscription("process", "save", saveFilter);
             }
+            if (!nsm.SubscriptionExists("process", "delete"))
+            {
+                var deleteFilter = new SqlFilter("Action = 'delete'");
+                nsm.CreateSubscription("process", "delete", deleteFilter);
+            }
 
             //add message to save topic
             var topicClient =
@@ -137,6 +142,11 @@ namespace AzureLabsServiceBusSender.Controllers
             if (!nsm.TopicExists("process"))
             {
                 nsm.CreateTopic("process");
+            }
+            if (!nsm.SubscriptionExists("process", "save"))
+            {
+                var saveFilter = new SqlFilter("Action = 'save'");
+                nsm.CreateSubscription("process", "save", saveFilter);
             }
             if (!nsm.SubscriptionExists("process", "delete"))
             {

@@ -113,12 +113,12 @@ namespace AzureLabsServiceBusSender.Controllers
             }
             if (!nsm.SubscriptionExists("process", "save"))
             {
-                var saveFilter = new SqlFilter("Action = 'save'");
+                var saveFilter = new SqlFilter("Action = 0");
                 nsm.CreateSubscription("process", "save", saveFilter);
             }
             if (!nsm.SubscriptionExists("process", "delete"))
             {
-                var deleteFilter = new SqlFilter("Action = 'delete'");
+                var deleteFilter = new SqlFilter("Action = 1");
                 nsm.CreateSubscription("process", "delete", deleteFilter);
             }
 
@@ -129,7 +129,7 @@ namespace AzureLabsServiceBusSender.Controllers
             {
                 Label = id
             };
-            msg.Properties["Action"] = "save";
+            msg.Properties.Add("Action", 0);
             topicClient.Send(msg);
 
             return RedirectToAction("Saved");
@@ -145,12 +145,12 @@ namespace AzureLabsServiceBusSender.Controllers
             }
             if (!nsm.SubscriptionExists("process", "save"))
             {
-                var saveFilter = new SqlFilter("Action = 'save'");
+                var saveFilter = new SqlFilter("Action = 0");
                 nsm.CreateSubscription("process", "save", saveFilter);
             }
             if (!nsm.SubscriptionExists("process", "delete"))
             {
-                var deleteFilter = new SqlFilter("Action = 'delete'");
+                var deleteFilter = new SqlFilter("Action = 1");
                 nsm.CreateSubscription("process", "delete", deleteFilter);
             }
 
@@ -161,7 +161,7 @@ namespace AzureLabsServiceBusSender.Controllers
             {
                 Label = id
             };
-            msg.Properties["Action"] = "delete";
+            msg.Properties.Add("Action", 1);
             topicClient.Send(msg);
 
             return RedirectToAction("Manage");

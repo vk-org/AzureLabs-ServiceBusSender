@@ -1,0 +1,34 @@
+﻿@model List<AzureLabsServiceBusSender.Models.UploadedImageViewModel>
+@{
+    ViewBag.Title = "Manage";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Manage Images</h2>
+        <p>These are images you have uploaded, but not yet processed. You can either keep or delete each uploaded image.</p>
+        <p>Newly uploaded photos may have a "no image available" placeholder, because the Azure Function which creates the image thumbnail has not had opportunity to resize the image yet. Wait a few seconds and refresh the page to see the thumbnail.</p>
+        <p>Newly deleted photos may continue to display here, because the Azure Function that deletes the image has not completed the task. Wait a few seconds and refresh this page, and the file should disappear.</p>
+        
+        @if (Model.Count > 0)
+        {
+            <table class="table table-hover">
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><img src="@item.ThumbnailUrl" alt="@item.ImageName"/></td>
+                        <td>@Html.ActionLink("Save This Image", "Save", new {id = item.ImageName }, new {@class = "btn btn-success"})</td>
+                        <td>@Html.ActionLink("Delete This Image", "Delete", new {id = item.ImageName }, new {@class = "btn btn-danger"})</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No images have been uploaded yet. @Html.ActionLink("Upload a photo", "Upload", null, new {@class="btn btn-primary"}).</p>
+        }
+
+    </div>
+</div>

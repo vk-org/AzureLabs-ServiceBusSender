@@ -1,0 +1,24 @@
+﻿@model AzureLabsServiceBusSender.Models.ImageUploadViewModel
+@{
+    ViewBag.Title = "Upload An Image";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Upload an Image</h2>
+        @using (Html.BeginForm("Upload", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            <div class="form-group">
+                @Html.LabelFor(m => m.File, new { @class = "btn btn-info" })
+                <input type="file" name="@Html.NameFor(m => m.File)" id="@Html.IdFor(m => m.File)" style="display: none;" onchange="$('#upload-file-info').html($(this).val());" />
+                <small id="upload-file-info"></small>
+                @Html.ValidationMessageFor(m => m.File)
+            </div>
+            <div class="form=group">
+                <input type="submit" value="Upload JPG" class="btn btn-primary" />
+            </div>
+        }
+    </div>
+</div>
+
+

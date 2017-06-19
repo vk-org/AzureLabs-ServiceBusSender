@@ -3,29 +3,41 @@
 }
 
 <div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+    <h1>Welcome to Pinehead Photos</h1>
+    <p class="lead">This ASP.NET MVC application is designed to show you the fundamentals of using Microsoft Azure's Service Bus, with both a standard queue and a topic queue with two subscriptions.</p>
 </div>
 
 <div class="row">
     <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2>Standard Queue: Start Here!</h2>
+            </div>
+            <div class="panel-body">
+                <p><b>To begin using this site, you must first upload at least one photo.</b></p>
+                <p>This website allows you to upload JPG photos to Azure Storage. Once uploaded, a message is put on a Service Bus queue, noting the name of the uploaded file.</p>
+                <p>From there, an Azure Function will receive that message, retrieve the image named in that message, and create a thumbnail of the photo.</p>
+                <p>@Html.ActionLink("Upload Photo", "Upload", null, new {@class = "btn btn-success btn-block"})</p>
+            </div>
+        </div>
     </div>
     <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <img src="~/img/Logo-Header.png" alt="pinehead" style="width: 100%;"/>
+            </div>
+        </div>
     </div>
     <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2>Topic Queue</h2>
+            </div>
+            <div class="panel-body">
+                <p>Once you've uploaded some photos, you can then choose to either retain the photo or delete it. Depending on your choice, a message with the name of that photo will be placed on a topic queue, in the "retain" or "delete" subscriptions.</p>
+                <p>An Azure Function will read messages from a given subscription. When messages are marked for retention, their names are added to an Azure Storage table. When they are marked for deletion, a Function will physically delete the Azure Storage blobs that contain its image and thumbnail.</p>
+                <p>@Html.ActionLink("Manage Photos", "Manage", null, new {@class = "btn btn-primary btn-block" })</p>
+            </div>
+        </div>
     </div>
 </div>

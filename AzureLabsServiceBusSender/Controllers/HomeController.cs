@@ -31,6 +31,7 @@ namespace AzureLabsServiceBusSender.Controllers
             savedThumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
             //create queue, topic and subs
+            //subs need to be recreated because functions create them without filters
             var nsm = NamespaceManager.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"]);
             if (!nsm.QueueExists("resize"))
             {
@@ -40,16 +41,12 @@ namespace AzureLabsServiceBusSender.Controllers
             {
                 nsm.CreateTopic("process");
             }
-            if (!nsm.SubscriptionExists("process", "save"))
-            {
-                var saveFilter = new SqlFilter("Action = 0");
-                nsm.CreateSubscription("process", "save", saveFilter);
-            }
-            if (!nsm.SubscriptionExists("process", "delete"))
-            {
-                var deleteFilter = new SqlFilter("Action = 1");
-                nsm.CreateSubscription("process", "delete", deleteFilter);
-            }
+            if (!nsm.SubscriptionExists("process", "save")) nsm.DeleteSubscription("process", "save");
+            var saveFilter = new SqlFilter("Action = 0");
+            nsm.CreateSubscription("process", "save", saveFilter);
+            if(!nsm.SubscriptionExists("process", "delete")) nsm.DeleteSubscription("process", "delete");
+            var deleteFilter = new SqlFilter("Action = 1");
+            nsm.CreateSubscription("process", "delete", deleteFilter);
 
             return View();
         }

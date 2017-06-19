@@ -14,6 +14,43 @@ namespace AzureLabsServiceBusSender.Controllers
     {
         public ActionResult Index()
         {
+            //create containers
+            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
+            var client = acct.CreateCloudBlobClient();
+            var uploadContainer = client.GetContainerReference("upload");
+            var uploadThumbContainer = client.GetContainerReference("uploadthumb");
+            uploadContainer.CreateIfNotExists();
+            uploadContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+            uploadThumbContainer.CreateIfNotExists();
+            uploadThumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+            var savedContainer = client.GetContainerReference("saved");
+            var savedThumbContainer = client.GetContainerReference("savedthumb");
+            savedContainer.CreateIfNotExists();
+            savedContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+            savedThumbContainer.CreateIfNotExists();
+            savedThumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+
+            //create queue, topic and subs
+            var nsm = NamespaceManager.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"]);
+            if (!nsm.QueueExists("resize"))
+            {
+                nsm.CreateQueue("resize");
+            }
+            if (!nsm.TopicExists("process"))
+            {
+                nsm.CreateTopic("process");
+            }
+            if (!nsm.SubscriptionExists("process", "save"))
+            {
+                var saveFilter = new SqlFilter("Action = 0");
+                nsm.CreateSubscription("process", "save", saveFilter);
+            }
+            if (!nsm.SubscriptionExists("process", "delete"))
+            {
+                var deleteFilter = new SqlFilter("Action = 1");
+                nsm.CreateSubscription("process", "delete", deleteFilter);
+            }
+
             return View();
         }
 
@@ -35,25 +72,14 @@ namespace AzureLabsServiceBusSender.Controllers
             var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
             var client = acct.CreateCloudBlobClient();
             var container = client.GetContainerReference("upload");
-            var thumbContainer = client.GetContainerReference("uploadthumb");
-            container.CreateIfNotExists();
-            container.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
-            thumbContainer.CreateIfNotExists();
-            thumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
             //save to azure storage
             var blob = container.GetBlockBlobReference(fName);
             using (var stream = model.File.InputStream)
             {
                 stream.Position = 0;
+                blob.Properties.ContentType = "image/jpeg";
                 blob.UploadFromStream(stream);
-            }
-
-            //make sure queue exists
-            var nsm = NamespaceManager.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"]);
-            if (!nsm.QueueExists("resize"))
-            {
-                nsm.CreateQueue("resize");
             }
 
             //add msg to queue
@@ -76,11 +102,6 @@ namespace AzureLabsServiceBusSender.Controllers
             var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
             var client = acct.CreateCloudBlobClient();
             var container = client.GetContainerReference("upload");
-            var thumbContainer = client.GetContainerReference("uploadthumb");
-            container.CreateIfNotExists();
-            container.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
-            thumbContainer.CreateIfNotExists();
-            thumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
             //get all the blobs in the upload container
             foreach (var item in container.ListBlobs())
@@ -104,23 +125,6 @@ namespace AzureLabsServiceBusSender.Controllers
 
         public ActionResult Save(string id)
         {
-            //make sure topic and sub exist
-            var nsm = NamespaceManager.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"]);
-            if (!nsm.TopicExists("process"))
-            {
-                nsm.CreateTopic("process");
-            }
-            if (!nsm.SubscriptionExists("process", "save"))
-            {
-                var saveFilter = new SqlFilter("Action = 0");
-                nsm.CreateSubscription("process", "save", saveFilter);
-            }
-            if (!nsm.SubscriptionExists("process", "delete"))
-            {
-                var deleteFilter = new SqlFilter("Action = 1");
-                nsm.CreateSubscription("process", "delete", deleteFilter);
-            }
-
             //add message to save topic
             var topicClient =
                 TopicClient.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"], "process");
@@ -136,23 +140,6 @@ namespace AzureLabsServiceBusSender.Controllers
 
         public ActionResult Delete(string id)
         {
-            //make sure topic and sub exist
-            var nsm = NamespaceManager.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"]);
-            if (!nsm.TopicExists("process"))
-            {
-                nsm.CreateTopic("process");
-            }
-            if (!nsm.SubscriptionExists("process", "save"))
-            {
-                var saveFilter = new SqlFilter("Action = 0");
-                nsm.CreateSubscription("process", "save", saveFilter);
-            }
-            if (!nsm.SubscriptionExists("process", "delete"))
-            {
-                var deleteFilter = new SqlFilter("Action = 1");
-                nsm.CreateSubscription("process", "delete", deleteFilter);
-            }
-
             //add message to delete subscription on topic
             var topicClient =
                 TopicClient.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"], "process");
@@ -173,11 +160,6 @@ namespace AzureLabsServiceBusSender.Controllers
             var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
             var client = acct.CreateCloudBlobClient();
             var container = client.GetContainerReference("saved");
-            var thumbContainer = client.GetContainerReference("savedthumb");
-            container.CreateIfNotExists();
-            container.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
-            thumbContainer.CreateIfNotExists();
-            thumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
             foreach (var item in container.ListBlobs())
             {

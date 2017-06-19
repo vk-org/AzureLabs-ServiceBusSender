@@ -33,7 +33,7 @@ namespace AzureLabsServiceBusSender.Controllers
             //upload to storage
             var fName = Path.GetFileName(model.File.FileName);
 
-            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureStorageConnection"]);
+            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
             var client = acct.CreateCloudBlobClient();
             var container = client.GetContainerReference("upload");
             var thumbContainer = client.GetContainerReference("uploadthumb");
@@ -57,13 +57,12 @@ namespace AzureLabsServiceBusSender.Controllers
                 nsm.CreateQueue("resize");
             }
 
-            //add msg
+            //add msg to queue
             var queueClient =
                 QueueClient.CreateFromConnectionString(ConfigurationManager.AppSettings["ServiceBusConnection"], "resize");
             var msg = new BrokeredMessage
             {
-                Label = fName,
-                ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(3)
+                Label = fName
             };
             queueClient.Send(msg);
 
@@ -74,7 +73,8 @@ namespace AzureLabsServiceBusSender.Controllers
         {
             var model = new List<UploadedImageViewModel>();
 
-            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureStorageConnection"]);
+            //access storage; create containers if they don't exist
+            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
             var client = acct.CreateCloudBlobClient();
             var container = client.GetContainerReference("upload");
             var thumbContainer = client.GetContainerReference("uploadthumb");
@@ -83,6 +83,7 @@ namespace AzureLabsServiceBusSender.Controllers
             thumbContainer.CreateIfNotExists();
             thumbContainer.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
+            //get all the blobs in the upload container
             foreach (var item in container.ListBlobs())
             {
                 var blob = (CloudBlockBlob) item;
@@ -93,6 +94,7 @@ namespace AzureLabsServiceBusSender.Controllers
                     ThumbnailUrl = blob.StorageUri.PrimaryUri.ToString().Replace("upload", "uploadthumb")
                 };
 
+                //use "no image" placeholder if there's no thumbnail yet
                 if (!client.GetContainerReference("uploadthumb").GetBlockBlobReference(tmp.ImageName).Exists())
                     tmp.ThumbnailUrl = "/img/noimage.jpg";
                 model.Add(tmp);
@@ -123,7 +125,6 @@ namespace AzureLabsServiceBusSender.Controllers
                 Label = id
             };
             msg.Properties["Action"] = "save";
-
             topicClient.Send(msg);
 
             return RedirectToAction("Saved");
@@ -160,7 +161,7 @@ namespace AzureLabsServiceBusSender.Controllers
         {
             var model = new List<UploadedImageViewModel>();
 
-            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureStorageConnection"]);
+            var acct = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["AzureWebJobsStorage"]);
             var client = acct.CreateCloudBlobClient();
             var container = client.GetContainerReference("saved");
             var thumbContainer = client.GetContainerReference("savedthumb");

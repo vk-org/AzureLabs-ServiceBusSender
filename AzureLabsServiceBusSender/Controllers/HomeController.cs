@@ -41,10 +41,10 @@ namespace AzureLabsServiceBusSender.Controllers
             {
                 nsm.CreateTopic("process");
             }
-            if (!nsm.SubscriptionExists("process", "save")) nsm.DeleteSubscription("process", "save");
+            if (nsm.SubscriptionExists("process", "save")) nsm.DeleteSubscription("process", "save");
             var saveFilter = new SqlFilter("Action = 0");
             nsm.CreateSubscription("process", "save", saveFilter);
-            if(!nsm.SubscriptionExists("process", "delete")) nsm.DeleteSubscription("process", "delete");
+            if(nsm.SubscriptionExists("process", "delete")) nsm.DeleteSubscription("process", "delete");
             var deleteFilter = new SqlFilter("Action = 1");
             nsm.CreateSubscription("process", "delete", deleteFilter);
 
